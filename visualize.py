@@ -4,11 +4,12 @@ import numpy as np
 def visualize_waiting(rho, num_count, mu, lam, waiting_times, bin_size, bins):
     plt.figure(figsize=(4,2.5))
     for i in range(len(waiting_times)):
-        plt.plot(bins[i][:-1], waiting_times[i], alpha = 1, label = f"N: {num_count[i]}")
-    plt.title(rf"System Load: {rho}, $\mu$: {mu}, $\lambda$: {lam}")
-    plt.xlabel("Waiting time")
-    plt.ylabel("Number of People Waiting")
+        plt.plot(bins[i][:-1], waiting_times[i], alpha = 1, label = f"n: {num_count[i]}")
+    plt.title(fr"Quantities of Queing Durations ($\rho$: {rho})")
+    plt.xlabel(r"$W_q$")
+    plt.ylabel("Number of People")
     plt.yscale("log")
+    plt.xlim(0)
     plt.legend()
     plt.show()
 
@@ -30,7 +31,7 @@ def visualize_increasing_rho(means, variances, rhos):
     plt.legend()
     plt.xlim(rhos[0], rhos[-1])
     plt.xlabel(r"$\rho$")
-    plt.ylabel("W")
+    plt.ylabel(r"$W_q$")
     plt.grid()
     plt.title("Mean and Variance for M/M/n")
     plt.show()

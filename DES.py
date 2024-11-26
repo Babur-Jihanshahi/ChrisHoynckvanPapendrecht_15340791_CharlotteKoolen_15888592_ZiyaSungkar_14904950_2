@@ -81,7 +81,7 @@ def run_simulation(num_customers, arrival_rate, service_rate, num_servers, rando
     env.run()
     return waiting
 
-def initialize(bin_size, mu, lambdaa, capacity, num_trials, num_cust, rand):
+def initialize(bin_size, mu, lambdaa, capacity, num_trials, num_cust, rand, calc_bins=False):
     bins_experiments = []
     bin_countjes =[]
     average_wait =[]
@@ -107,10 +107,13 @@ def initialize(bin_size, mu, lambdaa, capacity, num_trials, num_cust, rand):
 
         average_wait.append(np.mean(all_waits))
         variance_wait.append(np.var(all_waits))
-        counts, _ = np.histogram(all_waits, bins=bins)
-        bin_counts = counts/num_trials
-        bins_experiments.append(bins)
-        bin_countjes.append(bin_counts)
+
+        if calc_bins:
+            counts, _ = np.histogram(all_waits, bins=bins)
+            bin_counts = counts/num_trials
+            bin_counts[bin_counts < 1e-3] = 0  #optional, if number of people in bin is very low, discard
+            bins_experiments.append(bins)
+            bin_countjes.append(bin_counts)
 
     return average_wait, variance_wait, bin_countjes, bins_experiments, rho
 
@@ -130,10 +133,10 @@ def iterate_rho(bin_size, mu, capacity, num_trials, num_cust, rand):
 
 if __name__ == "__main__":
     rand = 43
-    bin_size = 0.1
+    bin_size = 0.3
     num_cust = 500 # Total number of customers
-    lambdaa = 1  # Generate new customers roughly every x seconds -> lower is quicker new arrivals
-    mu = 1.02 #mu -> lower is longer wait 
+    lambdaa = 0.99  # Generate new customers roughly every x seconds -> lower is quicker new arrivals
+    mu = 1.0 #mu -> lower is longer wait 
     capacity = [1, 2, 4]
     num_trials = 500
     runone = False
@@ -149,7 +152,7 @@ if __name__ == "__main__":
             visualize.visualize_trial(waitings)
 
         else:
-            average_wait, var, bin_countjes, bins_experiments, rho = initialize(bin_size, mu, lambdaa, capacity, num_trials, num_cust, rand)
+            average_wait, var, bin_countjes, bins_experiments, rho = initialize(bin_size, mu, lambdaa, capacity, num_trials, num_cust, rand, calc_bins=True)
             for k in range(len(capacity)):
                 print(f"for capacity: {capacity[k]}: the average wait time is: {average_wait[k]}")
             visualize.visualize_waiting(round(rho,2), capacity, mu,  lambdaa, bin_countjes, bin_size, bins_experiments)
