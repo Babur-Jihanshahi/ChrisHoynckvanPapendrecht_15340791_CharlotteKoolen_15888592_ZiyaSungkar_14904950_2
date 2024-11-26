@@ -16,10 +16,10 @@ Scenario:
 import simpy 
 import matplotlib.pyplot as plt
 import numpy as np
+import csv
 import visualize
 
 results = {} 
-WAITING = []
 
 def source(env, number, interval, counter, time_in_bank, waiting):
     """Source generates customers randomly"""
@@ -70,7 +70,7 @@ def run_simulation(num_customers, arrival_rate, service_rate, num_servers, rando
         dict: Results dictionary with metrics for each customer.
     """
     # Setup and start the simulation
-    print('starting simulation')
+    #print('starting simulation')
     np.random.seed(random_seed)
     env = simpy.Environment()
 
@@ -85,13 +85,15 @@ def initialize(bin_size, mu, lambdaa, capacity, num_trials, num_cust, rand):
     bins_experiments = []
     bin_countjes =[]
     average_wait =[]
+    variance_wait = []
+
+    rho = lambdaa/mu #system load when working with one counter
     for i in range(len(capacity)):
-        rho = lambdaa/(mu) #system load when working with one counter
-        mu_using = lambdaa/(rho*capacity[i]) #adjust mu such that the system load remains the same
-        print(f'System Load: { rho}, and rate to serve: {mu_using}')
+        lambda_using = lambdaa*capacity[i] #adjust mu such that the system load remains the same
+        print(f'System Load: { rho}, and arrival rate: {lambda_using}')
         trial_waitings = []
         for _ in range(num_trials):
-            waiting = run_simulation(num_cust, lambdaa, mu_using, capacity[i], rand)
+            waiting = run_simulation(num_cust, lambda_using , mu, capacity[i], rand)
             trial_waitings.append(waiting)
             #  update random variable
             rand+=1
@@ -102,26 +104,72 @@ def initialize(bin_size, mu, lambdaa, capacity, num_trials, num_cust, rand):
 
         # Initialize an array to accumulate bin counts
         bin_counts = np.zeros(len(bins) - 1)
+
         average_wait.append(np.mean(all_waits))
+        variance_wait.append(np.var(all_waits))
         counts, _ = np.histogram(all_waits, bins=bins)
         bin_counts = counts/num_trials
         bins_experiments.append(bins)
         bin_countjes.append(bin_counts)
 
-    return average_wait, bin_countjes, bins_experiments, rho
+    return average_wait, variance_wait, bin_countjes, bins_experiments, rho
+
+def iterate_rho(bin_size, mu, capacity, num_trials, num_cust, rand):
+    
+    lambdas = np.linspace(0.7, 0.9999, 100)
+    all_average_waits = []
+    all_variance_waits = []
+    rhos = []
+    for i in range(len(lambdas)):
+        average_wait, var, _, _, rho = initialize(bin_size, mu, lambdas[i], capacity, num_trials, num_cust, rand)
+        all_average_waits.append(average_wait)
+        all_variance_waits.append(var)
+        rhos.append(rho)
+    return all_average_waits, all_variance_waits, rhos
+
 
 if __name__ == "__main__":
     rand = 43
     bin_size = 0.1
-    num_cust = 10 # Total number of customers
-    lambdaa = 1.0  # Generate new customers roughly every x seconds -> lower is quicker new arrivals
-    mu = 1.002 #mu -> lower is longer wait 
+    num_cust = 500 # Total number of customers
+    lambdaa = 1  # Generate new customers roughly every x seconds -> lower is quicker new arrivals
+    mu = 1.02 #mu -> lower is longer wait 
     capacity = [1, 2, 4]
-    num_trials = 10000    
-    average_wait, bin_countjes, bins_experiments, rho = initialize(bin_size, mu, lambdaa, capacity, num_trials, num_cust, rand)
-    
-    
-    for k in range(len(capacity)):
-        print(f"for capacity: {capacity[k]}: the average wait time is: {average_wait[k]}")
+    num_trials = 500
+    runone = False
+    single_run = False
 
-    visualize.visualize_waiting(round(rho,2), capacity, mu,  lambdaa, bin_countjes, bin_size, bins_experiments)
+    if runone == True:
+        if single_run == True:
+            num_trials = 1
+            waitings = []
+            for i in range(3):
+                waiting = run_simulation(num_cust, lambdaa*capacity[i], mu, capacity[i], rand)
+                waitings.append(waiting)
+            visualize.visualize_trial(waitings)
+
+        else:
+            average_wait, var, bin_countjes, bins_experiments, rho = initialize(bin_size, mu, lambdaa, capacity, num_trials, num_cust, rand)
+            for k in range(len(capacity)):
+                print(f"for capacity: {capacity[k]}: the average wait time is: {average_wait[k]}")
+            visualize.visualize_waiting(round(rho,2), capacity, mu,  lambdaa, bin_countjes, bin_size, bins_experiments)
+
+    else:
+        means, variances, rhos = iterate_rho(bin_size, mu, capacity, num_trials, num_cust, rand)
+        print(f"means: {len(means)}")
+        print(f"variances: {len(variances)}")
+        print(f"rhos: {len(rhos)}")
+
+        with open("question_2.csv", mode='w', newline='') as file:
+            writer = csv.writer(file)
+    
+            # Write header
+            writer.writerow(["Rho", "Mean_1", "Mean_2", "Mean_4", "Variance_1", "Variance_2", "Variance_4"])
+    
+            # Write data row by row
+            for i, rho in enumerate(rhos):
+                row = [rho] + [means[i][j] for j in range(3)] + [variances[i][j] for j in range(3)]
+                writer.writerow(row)
+                
+        visualize.visualize_increasing_rho(np.column_stack(means), np.column_stack(variances), rhos)
+    
