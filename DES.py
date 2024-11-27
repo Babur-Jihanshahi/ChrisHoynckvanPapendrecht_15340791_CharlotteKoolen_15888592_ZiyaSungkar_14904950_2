@@ -139,8 +139,8 @@ if __name__ == "__main__":
     mu = 1.0 #mu -> lower is longer wait 
     capacity = [1, 2, 4]
     num_trials = 500
-    runone = False
-    single_run = False
+    runone = True
+    single_run = True
 
     if runone == True:
         if single_run == True:
