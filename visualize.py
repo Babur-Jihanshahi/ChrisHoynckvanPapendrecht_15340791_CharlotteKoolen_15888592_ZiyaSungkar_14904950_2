@@ -16,11 +16,14 @@ def visualize_waiting(rho, num_count, mu, lam, waiting_times, bin_size, bins):
 def visualize_increasing_rho(means, variances, rhos):
     # Plot each line with error bars
     plt.figure(figsize=(3, 3))
-    values= [1, 2, 4]
-    for i in range(len(means)):
-        stddev = np.sqrt(variances[i])  # Convert variances to standard deviations
-        mean = means[i]
-        plt.plot(rhos, mean, label=f"n: {values[i]}")
+    # Get number of different configurations from data shape
+    num_configs = means.shape[1]
+    # Labels for FIFO queues and SJF
+    labels = [f"n: {n}" for n in [1, 2, 4]] + ['SJF']
+    for i in range(num_configs):
+        stddev = np.sqrt(variances[:,i])  # Convert variances to standard deviations
+        mean = means[:,i]
+        plt.plot(rhos, mean, label=labels[i])
     
         # Add the shaded area for variance
         lower_bound = np.array(mean) - stddev
@@ -32,18 +35,17 @@ def visualize_increasing_rho(means, variances, rhos):
     plt.xlabel(r"$\rho$")
     plt.ylabel("W")
     plt.grid()
-    plt.title("Mean and Variance for M/M/n")
+    plt.title("Mean and Variance for M/M/n and SJF")
     plt.show()
-
     
 def visualize_trial(tot_waiting_time): 
-    num_count = [1, 2, 4]
+    num_count = [1, 2, 4, 'SJF'] 
     plt.figure(figsize=(3,3))
-    for i in range(3):
+    for i in range(len(tot_waiting_time)):
         people = np.linspace(0, len(tot_waiting_time[i]), len(tot_waiting_time[i]))
-        plt.scatter(people, tot_waiting_time[i], s=1.5, label= f"n: {num_count[i]}", alpha=0.7)
+        plt.scatter(people, tot_waiting_time[i], s=1.5, label=f"n: {num_count[i]}", alpha=0.7)
 
-    plt.title(r"Example $W_q$ for M/M/n")
+    plt.title(r"Example $W_q$ for M/M/n and SJF")
     plt.legend()
     plt.xlabel("Customer")
     plt.ylabel(r"$W_q$")
