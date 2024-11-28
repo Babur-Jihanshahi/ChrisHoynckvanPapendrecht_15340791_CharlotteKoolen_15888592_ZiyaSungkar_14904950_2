@@ -42,7 +42,12 @@ def customer(env, name, counter, time_in_bank, waiting):
 
         # print(f'{env.now:7.4f} {name}: Waited {wait:6.3f}')
 
-        tib = np.random.exponential(1.0 / time_in_bank)
+        # print(f'{env.now:7.4f} {name}: Waited {wait:6.3f}')
+        if np.random.rand() < 0.75:
+            tib = np.random.exponential(1.0 / time_in_bank)
+        else:
+            tib = np.random.exponential(5.0 / time_in_bank)
+
         yield env.timeout(tib)
         # print(f'{env.now:7.4f} {name}: Finished')
         results[name] = {
@@ -136,8 +141,9 @@ if __name__ == "__main__":
     bin_size = 0.3
     num_cust = 500 # Total number of customers
     lambdaa = 0.99  # Generate new customers roughly every x seconds -> lower is quicker new arrivals
-    mu = 1.0 #mu -> lower is longer wait 
+    mu = 1.0 #mu -> lower is longer wait
     capacity = [1, 2, 4]
+    service_times = [0.8, 1.0, 1.2] # added for M/D/n queues
     num_trials = 500
     runone = True
     single_run = True
@@ -163,7 +169,7 @@ if __name__ == "__main__":
         print(f"variances: {len(variances)}")
         print(f"rhos: {len(rhos)}")
 
-        with open("question_2.csv", mode='w', newline='') as file:
+        with open("question_4_longtail.csv", mode='w', newline='') as file:
             writer = csv.writer(file)
     
             # Write header
