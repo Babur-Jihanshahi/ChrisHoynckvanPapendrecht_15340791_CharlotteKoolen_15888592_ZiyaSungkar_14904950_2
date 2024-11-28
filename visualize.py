@@ -2,6 +2,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def visualize_waiting(rho, num_count, mu, lam, waiting_times, bin_size, bins):
+    '''
+    Visualizes quantities of customers falling inside the same waiting time bin. 
+    plots a line for every n.
+    '''
+
     plt.figure(figsize=(4,3.2), dpi=300)
     for i in range(len(waiting_times)):
         plt.plot(bins[i][:-1], waiting_times[i], alpha = 1, label = f"n: {num_count[i]}")
@@ -16,8 +21,11 @@ def visualize_waiting(rho, num_count, mu, lam, waiting_times, bin_size, bins):
 
 
 def visualize_increasing_rho(means, variances, rhos):
-    # Plot each line with error bars
-    plt.figure(figsize=(3, 3))
+    '''
+    Visualizes for every system (with different n) how the mean waiting time in que develops,
+    while rho is increasing and approaching 1. Also plots the variance. 
+    '''
+    plt.figure(figsize=(3, 3), dpi=300)
     values= [1, 2, 4]
     for i in range(len(means)):
         stddev = np.sqrt(variances[i])  # Convert variances to standard deviations
@@ -34,10 +42,15 @@ def visualize_increasing_rho(means, variances, rhos):
     plt.xlabel(r"$\rho$")
     plt.ylabel(r"$W_q$")
     plt.grid()
-    plt.title("Mean and Variance for M/M/n")
+    plt.title(r"Mean and Variance for M/$L_t$/n")
+    # plt.savefig("mu1_num_cust500_numtrials500.png", dpi=300)
     plt.show()
     
 def visualize_trial(tot_waiting_time): 
+    '''
+    Visualizes one trial, for every system (with different n).
+    on the x-axes are the customers, and y-axes the waiting time in queue.
+    '''
     num_count = [1, 2, 4]
     plt.figure(figsize=(3,3))
     for i in range(3):
@@ -52,8 +65,3 @@ def visualize_trial(tot_waiting_time):
     plt.ylim(0)
     # plt.savefig("example_trial.png", dpi=300)
     plt.show()
-
-
-# if __name__ == "__main__":
-#     visualize_waiting()
-#     visualize_total_time()

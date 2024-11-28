@@ -1,4 +1,4 @@
-# performing a pairwise Z-test -> could be t-test as it is drawn from an exponential dist, but didn't save raw data so don't know 
+# performing a pairwise T-test
 
 import pandas as pd
 import numpy as np
