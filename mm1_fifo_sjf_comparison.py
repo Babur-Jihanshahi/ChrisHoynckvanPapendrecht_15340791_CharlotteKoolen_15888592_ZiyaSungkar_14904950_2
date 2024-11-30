@@ -45,30 +45,34 @@ def compare_scheduling_policies(mu, lambdas, num_trials, num_cust, rand_seed):
 
 def visualize_comparison(means_fifo, variances_fifo, means_sjf, variances_sjf, rhos):
     """Visualize the comparison between FIFO and SJF scheduling"""
-    plt.figure(figsize=(8, 6))
-    # Plot FIFO results
-    plt.plot(rhos, means_fifo, label='FIFO', marker='o', markersize=4)
+    plt.figure(figsize=(10, 6), dpi=300)
+    
+    # Plot FIFO results with standard deviation bands
     std_dev_fifo = np.sqrt(variances_fifo)
+    plt.plot(rhos, means_fifo, label='FIFO', alpha=1)
     plt.fill_between(rhos, 
                     np.maximum(0, means_fifo - std_dev_fifo),
                     means_fifo + std_dev_fifo,
                     alpha=0.2)
-    # Plot SJF results
-    plt.plot(rhos, means_sjf, label='SJF', marker='s', markersize=4)
+    
+    # Plot SJF results with standard deviation bands
     std_dev_sjf = np.sqrt(variances_sjf)
+    plt.plot(rhos, means_sjf, label='SJF', alpha=1)
     plt.fill_between(rhos,
                     np.maximum(0, means_sjf - std_dev_sjf),
                     means_sjf + std_dev_sjf,
                     alpha=0.2)
     
-    plt.xlabel('ρ')
-    plt.ylabel('W')
-    plt.title('Mean Waiting Time: FIFO vs SJF')
+    plt.xlim(rhos[0], rhos[-1])
+    plt.xlabel(r"$\rho$")
+    plt.ylabel(r"$W_q$")
     plt.grid(True)
+    plt.title(r"Mean and Variance for M/M/1 FIFO vs SJF")
     plt.legend()
+    plt.savefig("fifo_vs_sjf_comparison.png", dpi=300)
     plt.show()
-    # Save results to CSV
-    with open("scheduling_comparison.csv", mode='w', newline='') as file:
+    # Save results to csv
+    with open("mm1_fifo_sjf_comparison.csv", mode='w', newline='') as file:
         writer = csv.writer(file)
         header = ["Rho", "FIFO_Mean", "SJF_Mean", "FIFO_Var", "SJF_Var"]
         writer.writerow(header)
@@ -76,10 +80,12 @@ def visualize_comparison(means_fifo, variances_fifo, means_sjf, variances_sjf, r
             row = [rho, means_fifo[i], means_sjf[i], variances_fifo[i], variances_sjf[i]]
             writer.writerow(row)
 
+    
+
 if __name__ == "__main__":
     # Simulation parameters
-    mu = 1.02
-    lambdas = np.linspace(0.7, 0.95, 20)  # Testing up to ρ = 0.95
+    mu = 1.00
+    lambdas = np.linspace(0.7, 0.9999, 100)  # Testing up to ρ = 0.95
     num_trials = 500
     num_cust = 500
     rand_seed = 43
