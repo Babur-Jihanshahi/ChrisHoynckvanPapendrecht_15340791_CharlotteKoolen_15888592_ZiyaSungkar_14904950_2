@@ -19,6 +19,8 @@ import numpy as np
 import csv
 import visualize
 
+#set true for M/D/1
+DET=False
 results = {} 
 
 def source(env, number, interval, counter, time_in_bank, waiting):
@@ -41,8 +43,10 @@ def customer(env, name, counter, time_in_bank, waiting):
         wait = env.now - arrive
 
         # print(f'{env.now:7.4f} {name}: Waited {wait:6.3f}')
-
-        tib = np.random.exponential(1.0 / time_in_bank)
+        if DET: 
+            tib = 1/time_in_bank 
+        else: 
+            tib = np.random.exponential(1.0 / time_in_bank)
         yield env.timeout(tib)
         # print(f'{env.now:7.4f} {name}: Finished')
         results[name] = {
@@ -138,6 +142,8 @@ def iterate_rho(bin_size, mu, capacity, num_trials, num_cust, rand):
 
 
 if __name__ == "__main__":
+
+    # setting variable values 
     rand = 43
     bin_size = 0.3
     num_cust = 500 # Total number of customers
@@ -145,10 +151,11 @@ if __name__ == "__main__":
     mu = 1.0 #mu -> service time, lower is longer wait 
     capacity = [1, 2, 4]
     num_trials = 500
-    runone = True
-    single_run = True
+    runone = False
+    single_run = False
 
     if runone == True:
+        # perfrom an experiment for only 1 lambda value
         if single_run == True:
             # do one examplatory run. 
             num_trials = 1
@@ -172,7 +179,7 @@ if __name__ == "__main__":
         print(f"variances: {len(variances)}")
         print(f"rhos: {len(rhos)}")
 
-        with open("question_2.csv", mode='w', newline='') as file:
+        with open("data/question_4_Det.csv", mode='w', newline='') as file:
             writer = csv.writer(file)
     
             # Write header

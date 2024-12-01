@@ -40,13 +40,10 @@ def customer(env, name, counter, time_in_bank, waiting):
         yield req
         wait = env.now - arrive
 
-        # print(f'{env.now:7.4f} {name}: Waited {wait:6.3f}')
-
-        # print(f'{env.now:7.4f} {name}: Waited {wait:6.3f}')
         if np.random.rand() < 0.75:
-            tib = np.random.exponential(1.0 / time_in_bank)
+            tib = np.random.exponential(1 / time_in_bank)
         else:
-            tib = np.random.exponential(5.0 / time_in_bank)
+            tib = np.random.exponential(1 / (time_in_bank*0.2))
 
         yield env.timeout(tib)
         # print(f'{env.now:7.4f} {name}: Finished')
@@ -92,7 +89,7 @@ def initialize(bin_size, mu, lambdaa, capacity, num_trials, num_cust, rand, calc
     average_wait =[]
     variance_wait = []
 
-    rho = lambdaa/mu #system load when working with one counter
+    rho = lambdaa/(mu*0.5) #system load when working with one counter
     for i in range(len(capacity)):
         lambda_using = lambdaa*capacity[i] #adjust mu such that the system load remains the same
         print(f'System Load: { rho}, and arrival rate: {lambda_using}')
@@ -124,7 +121,7 @@ def initialize(bin_size, mu, lambdaa, capacity, num_trials, num_cust, rand, calc
 
 def iterate_rho(bin_size, mu, capacity, num_trials, num_cust, rand):
     
-    lambdas = np.linspace(0.7, 0.9999, 100)
+    lambdas = np.linspace(0.35, 0.4999, 100)
     all_average_waits = []
     all_variance_waits = []
     rhos = []
@@ -140,13 +137,13 @@ if __name__ == "__main__":
     rand = 43
     bin_size = 0.3
     num_cust = 500 # Total number of customers
-    lambdaa = 0.99  # Generate new customers roughly every x seconds -> lower is quicker new arrivals
-    mu = 1.0 #mu -> lower is longer wait
+    lambdaa = 0.49  # Generate new customers roughly every x seconds -> lower is quicker new arrivals
+    mu = 1 #mu -> lower is longer 
     capacity = [1, 2, 4]
     service_times = [0.8, 1.0, 1.2] # added for M/D/n queues
     num_trials = 500
-    runone = True
-    single_run = True
+    runone = False
+    single_run = False
 
     if runone == True:
         if single_run == True:
@@ -169,7 +166,7 @@ if __name__ == "__main__":
         print(f"variances: {len(variances)}")
         print(f"rhos: {len(rhos)}")
 
-        with open("question_4_longtail.csv", mode='w', newline='') as file:
+        with open("data/question_4_longtail.csv", mode='w', newline='') as file:
             writer = csv.writer(file)
     
             # Write header

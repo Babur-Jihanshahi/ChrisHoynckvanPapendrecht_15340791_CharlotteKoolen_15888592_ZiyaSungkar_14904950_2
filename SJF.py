@@ -1,8 +1,8 @@
 import simpy 
 import numpy as np
 import csv
-import matplotlib.pyplot as plt
 from DES import run_simulation
+import visualize
 
 class SJFQueue(simpy.PriorityResource):
     """Custom resource implementing Shortest Job First scheduling"""
@@ -72,6 +72,7 @@ def compare_scheduling_policies(mu, lambdas, num_trials, num_cust, rand_seed):
         rho = lam/mu
         rhos.append(rho)
         print(f"\nProcessing rho {rho:.3f}")
+
         # FIFO M/M/1
         trial_waitings_fifo = []
         for trial in range(num_trials):
@@ -80,6 +81,7 @@ def compare_scheduling_policies(mu, lambdas, num_trials, num_cust, rand_seed):
         all_waits_fifo = np.concatenate(trial_waitings_fifo)
         means_fifo.append(np.mean(all_waits_fifo))
         variances_fifo.append(np.var(all_waits_fifo))
+
         # SJF M/M/1
         trial_waitings_sjf = []
         for trial in range(num_trials):
@@ -88,45 +90,8 @@ def compare_scheduling_policies(mu, lambdas, num_trials, num_cust, rand_seed):
         all_waits_sjf = np.concatenate(trial_waitings_sjf)
         means_sjf.append(np.mean(all_waits_sjf))
         variances_sjf.append(np.var(all_waits_sjf))
+        
     return np.array(means_fifo), np.array(variances_fifo), np.array(means_sjf), np.array(variances_sjf), np.array(rhos)
-
-def visualize_comparison(means_fifo, variances_fifo, means_sjf, variances_sjf, rhos):
-    """Visualize the comparison between FIFO and SJF scheduling"""
-    plt.figure(figsize=(10, 6), dpi=300)
-    
-    # Plot FIFO results with standard deviation bands
-    std_dev_fifo = np.sqrt(variances_fifo)
-    plt.plot(rhos, means_fifo, label='FIFO', alpha=1)
-    plt.fill_between(rhos, 
-                    np.maximum(0, means_fifo - std_dev_fifo),
-                    means_fifo + std_dev_fifo,
-                    alpha=0.2)
-    
-    # Plot SJF results with standard deviation bands
-    std_dev_sjf = np.sqrt(variances_sjf)
-    plt.plot(rhos, means_sjf, label='SJF', alpha=1)
-    plt.fill_between(rhos,
-                    np.maximum(0, means_sjf - std_dev_sjf),
-                    means_sjf + std_dev_sjf,
-                    alpha=0.2)
-    
-    plt.xlim(rhos[0], rhos[-1])
-    plt.xlabel(r"$\rho$")
-    plt.ylabel(r"$W_q$")
-    plt.grid(True)
-    plt.title(r"Mean and Variance for M/M/1 FIFO vs SJF")
-    plt.legend()
-    plt.savefig("fifo_vs_sjf_comparison.png", dpi=300)
-    plt.show()
-    # Save results to csv
-    with open("mm1_fifo_sjf_comparison.csv", mode='w', newline='') as file:
-        writer = csv.writer(file)
-        header = ["Rho", "FIFO_Mean", "SJF_Mean", "FIFO_Var", "SJF_Var"]
-        writer.writerow(header)
-        for i, rho in enumerate(rhos):
-            row = [rho, means_fifo[i], means_sjf[i], variances_fifo[i], variances_sjf[i]]
-            writer.writerow(row)
-
     
 
 if __name__ == "__main__":
@@ -141,4 +106,13 @@ if __name__ == "__main__":
         mu, lambdas, num_trials, num_cust, rand_seed
     )
     
-    visualize_comparison(means_fifo, variances_fifo, means_sjf, variances_sjf, rhos)
+
+    visualize.visualize_increasing_rho_sjf([means_fifo, means_sjf], [variances_fifo, variances_sjf], rhos)
+    # visualize_comparison(means_fifo, variances_fifo, means_sjf, variances_sjf, rhos)
+    with open("data/sjf_results.csv", mode='w', newline='') as file:
+        writer = csv.writer(file)
+        header = ["Rho", "FIFO_Mean", "SJF_Mean", "FIFO_Var", "SJF_Var"]
+        writer.writerow(header)
+        for i, rho in enumerate(rhos):
+            row = [rho, means_fifo[i], means_sjf[i], variances_fifo[i], variances_sjf[i]]
+            writer.writerow(row)
