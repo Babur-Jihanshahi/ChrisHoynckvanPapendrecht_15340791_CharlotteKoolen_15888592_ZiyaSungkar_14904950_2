@@ -5,19 +5,25 @@ import numpy as np
 from scipy.stats import t
 
 
-def compare_sjf_mmn():
+def compare_sjf_mmn(filename="FIFO_M", compare_sjf= False):
     # Read CSV file
-    data = pd.read_csv("data/question_2.csv")
-    sjf_data = pd.read_csv("data/mm1_fifo_sjf_comparison.csv")
+    data = pd.read_csv(f"data/{filename}.csv")
+    sjf_data = pd.read_csv("data/SJF_M.csv")
     n = 500
 
     rhos = data["Rho"].values
+    print(rhos)
 
-    sjf_mean = np.interp(rhos, sjf_data['Rho'], sjf_data['SJF_Mean'])
-    sjf_var = np.interp(rhos, sjf_data['Rho'], sjf_data['SJF_Var'])
-    means = np.column_stack((data[['Mean_1', 'Mean_2', 'Mean_4']].values, sjf_mean))
-    variances = np.column_stack((data[['Variance_1', 'Variance_2', 'Variance_4']].values, sjf_var))
+    if compare_sjf:
+        sjf_mean = np.interp(rhos, sjf_data['Rho'], sjf_data['SJF_Mean'])
+        sjf_var = np.interp(rhos, sjf_data['Rho'], sjf_data['SJF_Var'])
 
+        means = np.column_stack((data[['Mean_1', 'Mean_2', 'Mean_4']].values, sjf_mean))
+        variances = np.column_stack((data[['Variance_1', 'Variance_2', 'Variance_4']].values, sjf_var))
+    else: 
+        means = data[['Mean_1', 'Mean_2', 'Mean_4']].values
+        variances= data[['Variance_1', 'Variance_2', 'Variance_4']].values
+    
     results = []
 
     #do pairwise t-test
@@ -54,7 +60,7 @@ def compare_sjf_mmn():
 
     # Display or save results
     print(results_df)
-    results_df.to_csv("data/t_test_results_sjf.csv", index=False)
+    results_df.to_csv(f"data/statistical/t_test_results_{filename}.csv", index=False)
 
     filtered_results = []
 
@@ -66,49 +72,50 @@ def compare_sjf_mmn():
         p_values = row["P-Values"]
         
         # Filter rho values where p-value > 0.05
-        significant_rho = [rho for rho, p in zip(rho_values, p_values) if p > 0.0000000000000005]
+        non_significant_rho = [rho for rho, p in zip(rho_values, p_values) if p > 0.05]
         
         # If there are any significant rho values, store the result
-        if significant_rho:
+        if non_significant_rho:
             filtered_results.append({
                 "Group 1": group_1,
                 "Group 2": group_2,
-                "Significant Rho Values": significant_rho
+                "Significant Rho Values": non_significant_rho
             })
 
     # Convert to DataFrame and display
     filtered_results_df = pd.DataFrame(filtered_results)
 
     # Display or save the results
-    print(filtered_results_df)
-    filtered_results_df.to_csv("data/significant_rho_values.csv", index=False)
+    if len(filtered_results_df) > 0:
+        print(filtered_results_df)
+        filtered_results_df.to_csv(f"data/statistical/significant_rho_value_{filename}.csv", index=False)
 
-    # Print summary
-    print("\nStatistical Analysis Summary:")
-    print("============================")
-    for _, row in results_df.iterrows():
-        print(f"\n{row['Group 1']} vs {row['Group 2']}:")
-        significant_result = filtered_results_df[
-            (filtered_results_df['Group 1'] == row['Group 1']) & 
-            (filtered_results_df['Group 2'] == row['Group 2'])
-        ]
+        # Print summary
+        print("\nStatistical Analysis Summary:")
+        print("============================")
+        for _, row in results_df.iterrows():
+            print(f"\n{row['Group 1']} vs {row['Group 2']}:")
+            significant_result = filtered_results_df[
+                (filtered_results_df['Group 1'] == row['Group 1']) & 
+                (filtered_results_df['Group 2'] == row['Group 2'])
+            ]
         
-        if not significant_result.empty:
-            sig_rhos = significant_result.iloc[0]['Significant Rho Values']
-            rho_ranges = f"ρ ∈ [{min(sig_rhos):.2f}, {max(sig_rhos):.2f}]"
-            print(f"Configurations are NOT significantly different for {rho_ranges}")
-        else:
-            print("Configurations are significantly different at ALL rho values")
-
-
+            if not significant_result.empty:
+                sig_rhos = significant_result.iloc[0]['Significant Rho Values']
+                rho_ranges = f"ρ ∈ [{min(sig_rhos):.2f}, {max(sig_rhos):.2f}]"
+                print(f"Configurations are NOT significantly different for {rho_ranges}")
+            else:
+                print("Configurations are significantly different at ALL rho values")
+    else: 
+        print("Configurations are significantly different at ALL rho values, for ALL groups")
 
 def compare_distribuions():
     # performing a pairwise T-test to test significance between distributions 
 
     # Read CSV files
-    data_MMn = pd.read_csv("data/question_2.csv")
-    data_MDn = pd.read_csv("data/question_4_Det.csv")
-    data_MLtn = pd.read_csv("data/question_4_longtail.csv")
+    data_MMn = pd.read_csv("data/FIFO_M.csv")
+    data_MDn = pd.read_csv("data/FIFO_D.csv")
+    data_MLtn = pd.read_csv("data/FIFO_L_t.csv")
 
     rhos_MMn = data_MMn["Rho"].values
     means_MMn = data_MMn[["Mean_1", "Mean_2", "Mean_4"]].values
@@ -165,7 +172,7 @@ def compare_distribuions():
 
     # Display or save results
     print(results_df)
-    results_df.to_csv("data/t_test_results_MMn_MDn_MLtn.csv", index=False)
+    results_df.to_csv("data/statistical/t_test_results_MMn_MDn_MLtn.csv", index=False)
 
     filtered_results = []
 
@@ -178,6 +185,10 @@ def compare_distribuions():
         
         # Filter rho values where p-value < 0.05
         significant_rho = [rho for rho, p in zip(rho_values, p_values) if p < 0.05]
+        non_significant_rho = [rho for rho, p in zip(rho_values, p_values) if p > 0.05]
+
+        if len(non_significant_rho) == 0:
+            print(f"the differences for all rho values between {group_1} and {group_2} are significant")
         
         # If there are any significant rho values, store the result
         if significant_rho:
@@ -192,9 +203,19 @@ def compare_distribuions():
 
     # Display or save the results
     print(filtered_results_df)
-    filtered_results_df.to_csv("data/significant_rho_values_MMn_MDn_MLtn.csv", index=False)
+    filtered_results_df.to_csv("data/statistical/significant_rho_values_MMn_MDn_MLtn.csv", index=False)
 
 
 if __name__ == "__main__":
-    compare_sjf_mmn()
+
+    print("performing statistical tests for significance between different number of servers for the Exponential service distributions (also FIFO and SJF) \n")
+    compare_sjf_mmn(compare_sjf=True)
+
+    print("performing statistical tests for significance between different number of servers for the Deterministic service distributions \n")
+    compare_sjf_mmn("FIFO_D", compare_sjf=False)
+
+    print("performing statistical tests for significance between different number of servers for the Longtail service distributions \n")
+    compare_sjf_mmn("FIFO_L_t", compare_sjf=False)
+
+    print("performing statistical tests for significance between service distributions \n")
     compare_distribuions()

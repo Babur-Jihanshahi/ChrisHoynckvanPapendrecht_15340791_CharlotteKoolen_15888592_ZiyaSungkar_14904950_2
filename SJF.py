@@ -1,7 +1,7 @@
 import simpy 
 import numpy as np
 import csv
-from DES import run_simulation
+from FIFO import run_simulation
 import visualize
 
 class SJFQueue(simpy.PriorityResource):
@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
     visualize.visualize_increasing_rho_sjf([means_fifo, means_sjf], [variances_fifo, variances_sjf], rhos)
     # visualize_comparison(means_fifo, variances_fifo, means_sjf, variances_sjf, rhos)
-    with open("data/sjf_results.csv", mode='w', newline='') as file:
+    with open("data/SJF_M.csv", mode='w', newline='') as file:
         writer = csv.writer(file)
         header = ["Rho", "FIFO_Mean", "SJF_Mean", "FIFO_Var", "SJF_Var"]
         writer.writerow(header)
