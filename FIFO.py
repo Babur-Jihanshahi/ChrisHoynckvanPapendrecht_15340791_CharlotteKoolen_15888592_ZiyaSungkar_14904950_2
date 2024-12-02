@@ -6,9 +6,9 @@ import visualize
 
 
 #set true for M/D/1
-DET=True
+DET=False
 #set true for M/Lt/1
-LT=False
+LT=True
 results = {} 
 
 def source(env, number, interval, counter, time_in_bank, waiting):
@@ -35,9 +35,9 @@ def customer(env, name, counter, time_in_bank, waiting):
             tib = 1/time_in_bank 
         elif LT:
             if np.random.rand() < 0.75:
-                tib = np.random.exponential(1 / time_in_bank)
+                tib = np.random.exponential(1 / (time_in_bank*2))
             else:
-                tib = np.random.exponential(1 / (time_in_bank*0.2))
+                tib = np.random.exponential(1 / (time_in_bank*0.4))
         else: 
             tib = np.random.exponential(1.0 / time_in_bank)
         yield env.timeout(tib)
@@ -92,7 +92,7 @@ def initialize(bin_size, mu, lambdaa, capacity, num_trials, num_cust, rand, calc
 
     
     if LT:
-        rho = lambdaa/(mu*0.5) #for longtail the system load needs to be adjusted to average service time (twice original service time)
+        rho = lambdaa/(mu) #for longtail the system load needs to be adjusted to average service time (twice original service time)
     else: 
         rho = lambdaa/mu #system load when working with one counter
     
@@ -148,11 +148,11 @@ def iterate_rho(bin_size, mu, capacity, num_trials, num_cust, rand):
     '''
     Iterate over values of rhos, save each average result for that rho value by appending to a list and return
     ''' 
-    if LT:
-        #for the longtail distribution the service rate on average is lower, thus the lambda needs to be lower for rho < 1
-        lambdas = np.linspace(0.35, 0.4999, 100)
-    else:
-        lambdas = np.linspace(0.7, 0.9999, 100)
+    # if LT:
+    #     #for the longtail distribution the service rate on average is lower, thus the lambda needs to be lower for rho < 1
+    #     lambdas = np.linspace(0.35, 0.4999, 100)
+    # else:
+    lambdas = np.linspace(0.7, 0.9999, 100)
     all_average_waits = []
     all_variance_waits = []
     rhos = []

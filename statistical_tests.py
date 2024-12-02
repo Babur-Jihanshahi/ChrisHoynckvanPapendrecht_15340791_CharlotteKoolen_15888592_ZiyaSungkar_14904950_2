@@ -12,7 +12,6 @@ def compare_sjf_mmn(filename="FIFO_M", compare_sjf= False):
     n = 500
 
     rhos = data["Rho"].values
-    print(rhos)
 
     if compare_sjf:
         sjf_mean = np.interp(rhos, sjf_data['Rho'], sjf_data['SJF_Mean'])
@@ -115,7 +114,7 @@ def compare_distribuions():
     # Read CSV files
     data_MMn = pd.read_csv("data/FIFO_M.csv")
     data_MDn = pd.read_csv("data/FIFO_D.csv")
-    data_MLtn = pd.read_csv("data/FIFO_L_t.csv")
+    data_MLtn = pd.read_csv("data/FIFO_L_t_2.csv")
 
     rhos_MMn = data_MMn["Rho"].values
     means_MMn = data_MMn[["Mean_1", "Mean_2", "Mean_4"]].values
@@ -140,32 +139,34 @@ def compare_distribuions():
             (means_MDn[:, i], variances_MDn[:, i], "M/D/n"),
             (means_MLtn[:, i], variances_MLtn[:, i], "M/Lt/n")
         ]
-
+        
         # Pairwise comparisons between groups
         for p1 in range(len(pairs)):
             for p2 in range(p1 + 1, len(pairs)):
+                print(f"comparing for n: {i}, {pairs[p1][2]} with {pairs[p2][2]}  ")
                 mean_diff = pairs[p1][0] - pairs[p2][0]
                 combined_variance = pairs[p1][1] / n + pairs[p2][1] / n
             
-            # Compute the t-scores
-            t_scores = mean_diff / np.sqrt(combined_variance)
-            
-            # Compute degrees of freedom
-            df = (combined_variance**2) / (
-                    ((pairs[p1][1] / n)**2) / (n - 1) +
-                    ((pairs[p2][1] / n)**2) / (n - 1)
-                )
-            
-            # Compute the p-values
-            p_values = 2 * t.sf(np.abs(t_scores), df)
-            
-            results.append({
-                    "Group 1": f"{pairs[p1][2]} Mean_{i+1}",
-                    "Group 2": f"{pairs[p2][2]} Mean_{i+1}",
-                    "Rho_values": rhos_MMn.tolist(),
-                    "T-Scores": t_scores.tolist(),
-                    "P-Values": p_values.tolist()
-                })
+                # Compute the t-scores
+                t_scores = mean_diff / np.sqrt(combined_variance)
+                
+                # Compute degrees of freedom
+                df = (combined_variance**2) / (
+                        ((pairs[p1][1] / n)**2) / (n - 1) +
+                        ((pairs[p2][1] / n)**2) / (n - 1)
+                    )
+                
+                # Compute the p-values
+                p_values = 2 * t.sf(np.abs(t_scores), df)
+                
+                
+                results.append({
+                        "Group_1": f"{pairs[p1][2]} Mean_{i+1}",
+                        "Group_2": f"{pairs[p1 + 1][2]} Mean_{i+1}",
+                        "Rho_values": rhos_MMn.tolist(),
+                        "T-Scores": t_scores.tolist(),
+                        "P-Values": p_values.tolist()
+                    })
 
     # Convert results to DataFrame
     results_df = pd.DataFrame(results)
@@ -178,8 +179,8 @@ def compare_distribuions():
 
     # Iterate through each row
     for _, row in results_df.iterrows():
-        group_1 = row["Group 1"]
-        group_2 = row["Group 2"]
+        group_1 = row["Group_1"]
+        group_2 = row["Group_2"]
         rho_values = row["Rho_values"]
         p_values = row["P-Values"]
         
@@ -215,7 +216,7 @@ if __name__ == "__main__":
     compare_sjf_mmn("FIFO_D", compare_sjf=False)
 
     print("performing statistical tests for significance between different number of servers for the Longtail service distributions \n")
-    compare_sjf_mmn("FIFO_L_t", compare_sjf=False)
+    compare_sjf_mmn("FIFO_L_t_2", compare_sjf=False)
 
     print("performing statistical tests for significance between service distributions \n")
     compare_distribuions()
